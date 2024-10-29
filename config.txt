@@ -1,0 +1,44 @@
+# Parámetros Práctica 2
+
+# Archivos .TSP
+archivos = [a280.tsp, ch130.tsp, d18512.tsp, pr144.tsp, u1060.tsp]
+
+# Algoritmos
+algoritmos = [generacional, estacionario]
+
+# Identificador Alumno (DNI)
+dni = 77378287
+
+# Nº de Ejecuciones
+num_ejecuciones = 3
+
+# Aleatoriedad (Greedy Aleatorio)
+k = 5
+
+# Inicialización (Tamaño de la Población)
+tamanio = 100
+
+# Porcentaje de Individuos generados Aleatoriamente
+per_individuos = 0.8
+
+# Élite (Esquema Evolutivo Generacional)
+E = 1
+
+# Operador de Selección (Torneo Binario)
+kBest = 2
+
+# Operador de Reemplazamiento (Torneo Binario)
+kWorst = 3
+
+# Porcentaje de Probabilidad de Cruce
+per_cruce = 0.7
+
+# Porcentaje de Probabilidad de Mutación
+per_mutacion = 0.1
+
+# Condiciones de Parada
+max_evaluaciones = 50000
+tiempo = 60
+
+# Registro de Eventos (Logs) --> {'yes' : terminal, 'no' : logs}
+echo = yes
