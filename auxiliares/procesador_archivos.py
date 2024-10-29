@@ -49,6 +49,7 @@ class ProcesadorTSP:
         identificadores_tour = [self.identificadores[i] for i in tour]
         print("Tour:", identificadores_tour)
 
+
 class ProcesadorTXT:
     """"Procesa archivos de tipo .txt para leer otros datos específicos"""
 
