@@ -39,20 +39,21 @@ class GreedyAleatorio:
         distancia_total = 0.0
 
         for _ in range(num_ciudades - 1):
-            # Filtra las ciudades no visitadas
-            no_visitadas = np.where(~visitadas)[0]
-
-            # Obtiene las k más prometedoras
-            prometedoras = ciudades_ordenadas[np.isin(ciudades_ordenadas, no_visitadas)][self.parametros['k']]
+            # Filtra las ciudades no visitadas y obtiene las k más prometedoras
+            no_visitadas = ciudades_ordenadas[~visitadas[ciudades_ordenadas]]
+            prometedoras = no_visitadas[:self.parametros['k']]
 
             # Elige una ciudad aleatoriamente
             ciudad_siguiente = random.choice(prometedoras)
-
             distancia_total += self.matriz[ciudad_actual, ciudad_siguiente]
 
             # Actualiza la solución
             tour.append(ciudad_siguiente)
             visitadas[ciudad_siguiente] = True
             ciudad_actual = ciudad_siguiente
+
+        # Regreso a la ciudad de inicio
+        distancia_total += self.matriz[ciudad_actual, tour[0]]
+        tour.append(tour[0])
 
         return tour, distancia_total
