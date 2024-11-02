@@ -10,14 +10,12 @@ import numpy as np
 class GreedyAleatorio:
     """Implementa el algoritmo greedy aleatorio para la generación de soluciones"""
 
-    def __init__(self, matriz, parametros, semilla):
+    def __init__(self, matriz, parametros):
         self.matriz = matriz
         self.parametros = parametros
-        self.semilla = semilla
 
     def ejecutar(self):
-        # Ejecuta el algoritmo con una semilla específica
-        random.seed(self.semilla)
+        # Comienza la ejecución
         num_ciudades = self.matriz.shape[0]
 
         tour = []
@@ -26,7 +24,7 @@ class GreedyAleatorio:
         # Calcula la suma de cada ciudad al resto
         suma_distancias = np.sum(self.matriz, axis=1)
 
-        # Ordena la ciudades
+        # Ordena las ciudades
         ciudades_ordenadas = np.argsort(suma_distancias)
 
         # Selecciona la ciudad inicial de entre las k más prometedoras
@@ -55,5 +53,8 @@ class GreedyAleatorio:
         # Regreso a la ciudad de inicio
         distancia_total += self.matriz[ciudad_actual, tour[0]]
         tour.append(tour[0])
+
+        # Convierte tour a np.ndarray
+        tour = np.array(tour)
 
         return tour, distancia_total
