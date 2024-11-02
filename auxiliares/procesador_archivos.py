@@ -10,11 +10,10 @@ from scipy.spatial.distance import cdist
 
 class ProcesadorTSP:
     """"Procesa archivos de tipo .tsp para leer instancias de problemas específicos"""
-
     def __init__(self, archivo):
         self.archivo = archivo
         self.matriz_distancias = None
-        self.tour = None
+        self.tour = []
         self.identificadores = []
 
     def cargar_datos(self):
@@ -41,11 +40,13 @@ class ProcesadorTSP:
         self.matriz_distancias = cdist(coordenadas, coordenadas, 'euclidean')
 
         # Inicializa el tour
-        self.tour = list(range(dimension))
+        self.tour = np.random.permutation(dimension)
         return self.matriz_distancias, self.tour
 
     def mostrar_tour(self, tour):
-        # Muestra el tour mostrando los identificadores de las ciudades
+        # Convertir tour a lista si es np.ndarray
+        if isinstance(tour, np.ndarray):
+            tour = tour.tolist()
         identificadores_tour = [self.identificadores[i] for i in tour]
         print("Tour:", identificadores_tour)
 
