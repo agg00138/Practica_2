@@ -14,6 +14,7 @@ class GreedyAleatorio:
         self.matriz = matriz
         self.parametros = parametros
 
+
     def ejecutar(self):
         # Comienza la ejecución
         num_ciudades = self.matriz.shape[0]
@@ -27,7 +28,7 @@ class GreedyAleatorio:
         # Ordena las ciudades
         ciudades_ordenadas = np.argsort(suma_distancias)
 
-        # Selecciona la ciudad inicial de entre las k más prometedoras
+        # Selecciona la ciudad inicial de entre las 'k' más prometedoras
         prometedoras = ciudades_ordenadas[:self.parametros['k']]
         ciudad_actual = random.choice(prometedoras)
 
@@ -37,7 +38,7 @@ class GreedyAleatorio:
         distancia_total = 0.0
 
         for _ in range(num_ciudades - 1):
-            # Filtra las ciudades no visitadas y obtiene las k más prometedoras
+            # Filtra las ciudades no visitadas y obtiene las 'k' más prometedoras
             no_visitadas = ciudades_ordenadas[~visitadas[ciudades_ordenadas]]
             prometedoras = no_visitadas[:self.parametros['k']]
 
@@ -54,7 +55,7 @@ class GreedyAleatorio:
         distancia_total += self.matriz[ciudad_actual, tour[0]]
         tour.append(tour[0])
 
-        # Convierte tour a np.ndarray
-        tour = np.array(tour)
+        # Convierte tour a un array de numpy
+        tour = np.asarray(tour)
 
         return tour, distancia_total
