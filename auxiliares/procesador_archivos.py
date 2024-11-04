@@ -18,10 +18,17 @@ class ProcesadorTSP:
         self.identificadores = []
 
 
-    def cargar_datos(self):
+    def cargar_datos_tsp(self):
         # Lógica para cargar y procesar el archivo .tsp
-        with open(self.archivo, 'r') as archivo:
-            lineas = archivo.readlines()
+        try:
+            with open(self.archivo, 'r') as archivo:
+                lineas = archivo.readlines()
+        except FileNotFoundError:
+            print(f'Error: El archivo {self.archivo} no se encontró.')
+            return None
+        except Exception as e:
+            print(f'Error al abrir el archivo {self.archivo}: {e}')
+            return None
 
         coordenadas = []
         dimension = 0
@@ -62,10 +69,17 @@ class ProcesadorTXT:
         self.parametros = {}
 
 
-    def cargar_datos(self):
+    def cargar_datos_txt(self):
         # Lógica para cargar y procesar el archivo .txt
-        with open(self.archivo, 'r') as archivo:
-            lineas = archivo.readlines()
+        try:
+            with open(self.archivo, 'r') as archivo:
+                lineas = archivo.readlines()
+        except FileNotFoundError:
+            print(f'Error: El archivo {self.archivo} no se encontró.')
+            return None
+        except Exception as e:
+            print(f'Error al abrir el archivo {self.archivo}: {e}')
+            return None
 
         for linea in lineas:
             linea = linea.strip()

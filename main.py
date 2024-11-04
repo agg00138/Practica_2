@@ -28,7 +28,7 @@ def main():
     # Carga los datos del config.txt
     archivo_config = sys.argv[1]
     txt = ProcesadorTXT(archivo_config)
-    params = txt.cargar_datos()
+    params = txt.cargar_datos_txt()
 
     print('Parámetros procesados:')
     for clave, valor in params.items():
@@ -47,7 +47,7 @@ def main():
     for archivo in archivos_tsp:
         ruta_archivo = os.path.join('data', archivo)
         tsp = ProcesadorTSP(ruta_archivo)
-        matriz, tour = tsp.cargar_datos()
+        matriz, tour = tsp.cargar_datos_tsp()
 
         print('\n========================')
         print(f'Procesando {archivo}:')
