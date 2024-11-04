@@ -10,11 +10,13 @@ from scipy.spatial.distance import cdist
 
 class ProcesadorTSP:
     """"Procesa archivos de tipo .tsp para leer instancias de problemas específicos"""
+
     def __init__(self, archivo):
         self.archivo = archivo
         self.matriz_distancias = None
         self.tour = []
         self.identificadores = []
+
 
     def cargar_datos(self):
         # Lógica para cargar y procesar el archivo .tsp
@@ -43,6 +45,7 @@ class ProcesadorTSP:
         self.tour = np.random.permutation(dimension)
         return self.matriz_distancias, self.tour
 
+
     def mostrar_tour(self, tour):
         # Convertir tour a lista si es np.ndarray
         if isinstance(tour, np.ndarray):
@@ -57,6 +60,7 @@ class ProcesadorTXT:
     def __init__(self, archivo):
         self.archivo = archivo
         self.parametros = {}
+
 
     def cargar_datos(self):
         # Lógica para cargar y procesar el archivo .txt
@@ -75,13 +79,15 @@ class ProcesadorTXT:
 
                 # Convierte los valores a los tipos adecuados
                 if valor.startswith('[') and valor.endswith(']'):
-                    valor = [x.strip() for x in valor[1:-1].split(',')]
+                    valor = [x.strip().strip("'\"") for x in valor[1:-1].split(',')]
                 elif valor.isdigit():
                     valor = int(valor)
                 elif valor.replace('.', '', 1).isdigit():
                     valor = float(valor)
                 elif valor.lower() in ['yes', 'no']:
                     valor = valor.lower() == 'yes'
+                else:
+                    valor = valor
 
                 # Almacena en el diccionario los parámetros leídos
                 self.parametros[clave] = valor
