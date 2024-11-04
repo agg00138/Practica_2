@@ -3,13 +3,13 @@
 # Archivos .TSP
 archivos = [a280.tsp, ch130.tsp, d18512.tsp, pr144.tsp, u1060.tsp]
 
-# Algoritmos
+# Algoritmos Evolutivos
 algoritmos = [generacional, estacionario]
 
 # Identificador Alumno (DNI)
 dni = 77378287
 
-# Nº de Ejecuciones
+# n.º de Ejecuciones
 num_ejecuciones = 3
 
 # Aleatoriedad (Greedy Aleatorio)
@@ -22,7 +22,7 @@ tamanio = 100
 per_individuos = 0.8
 
 # Élite (Esquema Evolutivo Generacional)
-E = 1
+E = 2
 
 # Operador de Selección (Torneo Binario)
 kBest = 2
@@ -33,6 +33,9 @@ kWorst = 3
 # Porcentaje de Probabilidad de Cruce
 per_cruce = 0.7
 
+# Tipo de Cruce (OX2 | MOC)
+cruce = OX2
+
 # Porcentaje de Probabilidad de Mutación
 per_mutacion = 0.1
 
@@ -40,5 +43,5 @@ per_mutacion = 0.1
 max_evaluaciones = 50000
 tiempo = 60
 
-# Registro de Eventos (Logs) --> {'yes' : terminal, 'no' : logs}
+# Registro de Eventos (Logs) --> {'yes': terminal, 'no': logs}
 echo = yes
