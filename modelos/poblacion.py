@@ -11,8 +11,8 @@ import numpy as np
 class Poblacion:
     """Implementa una población de individuos."""
 
-    def __init__(self, t, matriz, params):
-        self.t = t
+    def __init__(self, generacion, matriz, params):
+        self.t = generacion
         self.matriz = matriz
         self.params = params
         self.individuos = self.inicializar()
