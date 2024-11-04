@@ -47,7 +47,7 @@ class ProcesadorTSP:
 
 
     def mostrar_tour(self, tour):
-        # Convertir tour a lista si es np.ndarray
+        # Convertir tour a lista si es una instancia de np.ndarray
         if isinstance(tour, np.ndarray):
             tour = tour.tolist()
         identificadores_tour = [self.identificadores[i] for i in tour]
