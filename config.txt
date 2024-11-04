@@ -1,13 +1,13 @@
 # Parámetros Práctica 2
 
 # Archivos .TSP
-archivos = [a280.tsp, ch130.tsp, d18512.tsp, pr144.tsp, u1060.tsp]
+archivos_tsp = [a280.tsp, ch130.tsp, d18512.tsp, pr144.tsp, u1060.tsp]
 
 # Algoritmos Evolutivos
 algoritmos = [generacional, estacionario]
 
 # Identificador Alumno (DNI)
-dni = 77378287
+dni_alumno = 77378287
 
 # n.º de Ejecuciones
 num_ejecuciones = 3
