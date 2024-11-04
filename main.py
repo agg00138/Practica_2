@@ -17,6 +17,33 @@ def print_hi(name):
     print(f'👋 ¡Hola, {name}! Bienvenido al mundo de las soluciones optimizadas. 🚀🧬')
 
 
+def procesar_archivos_tsp(archivos_tsp, params, semillas):
+    # Todo: Procesamiento de los archivos .tsp
+    for archivo in archivos_tsp:
+        ruta_archivo = os.path.join('data', archivo)
+
+        if not os.path.exists(ruta_archivo):
+            print(f'Error: El archivo {ruta_archivo} no se encontró.')
+            continue
+
+        tsp = ProcesadorTSP(ruta_archivo)
+        matriz, tour = tsp.cargar_datos_tsp()
+
+        print('\n========================')
+        print(f'Procesando {archivo}:')
+        print('========================')
+
+        for i, semilla in enumerate(semillas, start=1):
+            random.seed(semilla)
+            np.random.seed(semilla)
+
+            # PRUEBA 01: Algoritmo Greedy Aleatorio
+            greedy = GreedyAleatorio(matriz, params)
+            tour, distancia_total = greedy.ejecutar()
+            tsp.mostrar_tour(tour)
+            print(f'>>> Distancia total del tour = {distancia_total:.2f} (metros)\n.')
+
+
 def main():
     """Función principal"""
 
@@ -43,25 +70,8 @@ def main():
     # Carga los archivos .tsp
     archivos_tsp = params['archivos_tsp']
 
-    # Todo: Procesamiento de los archivos .tsp
-    for archivo in archivos_tsp:
-        ruta_archivo = os.path.join('data', archivo)
-        tsp = ProcesadorTSP(ruta_archivo)
-        matriz, tour = tsp.cargar_datos_tsp()
-
-        print('\n========================')
-        print(f'Procesando {archivo}:')
-        print('========================')
-
-        for i, semilla in enumerate(semillas, start=1):
-            random.seed(semilla)
-            np.random.seed(semilla)
-
-            # PRUEBA 01: Algoritmo Greedy Aleatorio
-            greedy = GreedyAleatorio(matriz, params)
-            tour, distancia_total = greedy.ejecutar()
-            tsp.mostrar_tour(tour)
-            print(f'>>> Distancia total del tour = {distancia_total} (km)\n.')
+    # Procesa los archivos
+    procesar_archivos_tsp(archivos_tsp, params, semillas)
 
 
 if __name__ == '__main__':
