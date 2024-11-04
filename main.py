@@ -6,7 +6,8 @@ import sys, os, random
 # Importaciones locales
 from auxiliares.funciones_generales import generar_semillas
 from auxiliares.procesador_archivos import ProcesadorTXT, ProcesadorTSP
-from algoritmos.AlgGRE_Clase01_Grupo06 import GreedyAleatorio
+#from algoritmos.AlgGRE_Clase01_Grupo06 import GreedyAleatorio
+from modelos.poblacion import Poblacion
 
 # Importaciones de terceros
 import numpy as np
@@ -38,10 +39,17 @@ def procesar_archivos_tsp(archivos_tsp, params, semillas):
             np.random.seed(semilla)
 
             # PRUEBA 01: Algoritmo Greedy Aleatorio
-            greedy = GreedyAleatorio(matriz, params)
-            tour, distancia_total = greedy.ejecutar()
-            tsp.mostrar_tour(tour)
-            print(f'>>> Distancia total del tour = {distancia_total:.2f} (metros)\n.')
+            # greedy = GreedyAleatorio(matriz, params)
+            # tour, distancia_total = greedy.ejecutar()
+            # tsp.mostrar_tour(tour)
+            # print(f'>>> Distancia total del tour = {distancia_total:.2f} (metros)\n.')
+
+            # PRUEBA 02: Instancias de Población
+            poblacion = Poblacion(t=0, matriz=matriz, params=params)
+            poblacion.inicializar()
+            for ind in poblacion.individuos:
+                print(ind.tour)
+                print(f'>>>distancia del tour = {ind.distancia}\n')
 
 
 def main():
