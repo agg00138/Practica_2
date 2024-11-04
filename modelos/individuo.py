@@ -7,10 +7,14 @@ import numpy as np
 class Individuo:
     """Implementa un individuo de la población."""
 
-    def __init__(self, tour, matriz):
+    def __init__(self, tour, matriz, distancia=0):
         self.tour = tour
         self.matriz = matriz
-        self.distancia = self.calcular_distancia(self.matriz)
+
+        if distancia == 0:
+            self.distancia = self.calcular_distancia(self.matriz)
+        else:
+            self.distancia = distancia
 
 
     def calcular_distancia(self, matriz):
