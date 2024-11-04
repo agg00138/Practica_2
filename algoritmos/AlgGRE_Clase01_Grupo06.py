@@ -10,9 +10,14 @@ import numpy as np
 class GreedyAleatorio:
     """Implementa el algoritmo greedy aleatorio para la generación de soluciones"""
 
-    def __init__(self, matriz, parametros):
+    def __init__(self, matriz, params):
         self.matriz = matriz
-        self.parametros = parametros
+        self.params = params
+
+        if 'k' not in self.parametros:
+            raise ValueError("El parámetro 'k' debe estar definido en los parámetros.")
+        if not (1 <= self.parametros['k'] <= self.matriz.shape[0]):
+            raise ValueError("El valor de 'k' debe estar entre 1 y el número total de ciudades.")
 
 
     def ejecutar(self):
@@ -29,7 +34,7 @@ class GreedyAleatorio:
         ciudades_ordenadas = np.argsort(suma_distancias)
 
         # Selecciona la ciudad inicial de entre las 'k' más prometedoras
-        prometedoras = ciudades_ordenadas[:self.parametros['k']]
+        prometedoras = ciudades_ordenadas[:self.params['k']]
         ciudad_actual = random.choice(prometedoras)
 
         # Añade la ciudad a la solucion
@@ -40,7 +45,7 @@ class GreedyAleatorio:
         for _ in range(num_ciudades - 1):
             # Filtra las ciudades no visitadas y obtiene las 'k' más prometedoras
             no_visitadas = ciudades_ordenadas[~visitadas[ciudades_ordenadas]]
-            prometedoras = no_visitadas[:self.parametros['k']]
+            prometedoras = no_visitadas[:self.params['k']]
 
             # Elige una ciudad aleatoriamente
             ciudad_siguiente = random.choice(prometedoras)
