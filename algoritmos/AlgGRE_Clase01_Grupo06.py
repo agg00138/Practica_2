@@ -14,9 +14,9 @@ class GreedyAleatorio:
         self.matriz = matriz
         self.params = params
 
-        if 'k' not in self.parametros:
+        if 'k' not in self.params:
             raise ValueError("El parámetro 'k' debe estar definido en los parámetros.")
-        if not (1 <= self.parametros['k'] <= self.matriz.shape[0]):
+        if not (1 <= self.params['k'] <= self.matriz.shape[0]):
             raise ValueError("El valor de 'k' debe estar entre 1 y el número total de ciudades.")
 
 
