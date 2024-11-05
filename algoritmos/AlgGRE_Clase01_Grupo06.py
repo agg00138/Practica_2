@@ -58,7 +58,6 @@ class GreedyAleatorio:
 
         # Regreso a la ciudad de inicio
         distancia_total += self.matriz[ciudad_actual, tour[0]]
-        tour.append(tour[0])
 
         # Convierte tour a un array de numpy
         tour = np.asarray(tour)
