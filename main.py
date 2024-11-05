@@ -7,7 +7,8 @@ import sys, os, random
 from auxiliares.funciones_generales import generar_semillas
 from auxiliares.procesador_archivos import ProcesadorTXT, ProcesadorTSP
 #from algoritmos.AlgGRE_Clase01_Grupo06 import GreedyAleatorio
-from modelos.poblacion import Poblacion
+#from modelos.poblacion import Poblacion
+from algoritmos.AlgGEN_Clase01_Grupo06 import Generacional
 
 # Importaciones de terceros
 import numpy as np
@@ -45,11 +46,24 @@ def procesar_archivos_tsp(archivos_tsp, params, semillas):
             # print(f'>>> Distancia total del tour = {distancia_total:.2f} (metros)\n.')
 
             # PRUEBA 02: Instancias de Población
-            poblacion = Poblacion(t=0, matriz=matriz, params=params)
-            poblacion.inicializar()
-            for ind in poblacion.individuos:
-                print(ind.tour)
-                print(f'>>>distancia del tour = {ind.distancia}\n')
+            # poblacion = Poblacion(t=0, matriz=matriz, params=params)
+            # poblacion.inicializar()
+            # for ind in poblacion.individuos:
+            #     print(ind.tour)
+            #     print(f'>>>distancia del tour = {ind.distancia}\n')
+
+            # PRUEBA 03: Generacional
+            # Ejecuta el algoritmo evolutivo generacional
+            generacional = Generacional(matriz, params)  # Crea una instancia del algoritmo generacional
+            generacional.ejecutar()  # Ejecuta el algoritmo
+
+            # Muestra resultados
+            print(f'Generación final alcanzada: {generacional.generacion}')
+            print(f'Evaluaciones realizadas: {generacional.evaluaciones}')
+            mejor_individuo = min(generacional.poblacion.individuos, key=lambda ind: ind.fitness)
+            print(f'Mejor tour encontrado: {mejor_individuo.tour}')
+            print(f'Distancia total del mejor tour: {mejor_individuo.distancia}\n')
+
 
 
 def main():

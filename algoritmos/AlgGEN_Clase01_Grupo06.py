@@ -19,6 +19,7 @@ class Generacional:
         self.params = params
         self.generacion = 0
         self.evaluaciones = 0
+        self.inicio_tiempo = time.time()  # Iniciar el tiempo de ejecución
 
         # Inicializar la población
         self.poblacion = Poblacion(self.generacion, self.matriz, self.params)
@@ -29,12 +30,15 @@ class Generacional:
 
     def ejecutar(self):
         """Ejecuta el algoritmo evolutivo generacional."""
+        self.poblacion.inicializar()    # Inicializa la población
         self.evaluar()  # Evalua la población actual
         while not self.condicion_parada():
+            print(f'GENERACION = {self.generacion} - EVALUACIONES = {self.evaluaciones}')
             self.generacion += 1
 
             # Obtiene el élite
             elites = self.obtener_elites()
+            print(f'Élite: {elites}')       # Mostrar correctamente las distancias
 
             # Selecciona la población intermedia P´ desde P(t - 1)
             poblacion_intermedia = self.seleccionar()
@@ -93,9 +97,9 @@ class Generacional:
         hijos = []
 
         # Itera sobre la población intermedia en pares
-        for i in range(0, len(poblacion_intermedia.individuos), 2):
+        for i in range(0, len(poblacion_intermedia.individuos) - 1, 2):
             padre1 = poblacion_intermedia.individuos[i]
-            padre2 = poblacion_intermedia.individuos[i + 1] if i + 1 < len(poblacion_intermedia.individuos) else poblacion_intermedia.individuos[0]
+            padre2 = poblacion_intermedia.individuos[i + 1]
 
             # Recombina el par de padres seleccionados
             hijo1, hijo2 = self.recombinar_par(padre1, padre2)
@@ -119,12 +123,14 @@ class Generacional:
         # Aplicar cruce con una probabilidad del 70%
         if random.random() < self.params['per_cruce']:
             # Elegir al azar entre OX2 y MOC
-            if random.random() < 0.5:
+            if self.params['cruce'] == 'OX2':
                 # Aplicar cruce OX2
-                hijo1, hijo2 = self.cruce_ox2(padre1, padre2)
+                hijo1 = self.cruce_ox2(padre1, padre2)
+                hijo2 = self.cruce_ox2(padre2, padre1)
             else:
                 # Aplicar cruce MOC
-                hijo1, hijo2 = self.cruce_moc(padre1, padre2)
+                hijo1 = self.cruce_moc(padre1, padre2)
+                hijo2 = self.cruce_moc(padre2, padre1)
 
         return hijo1, hijo2
 
@@ -143,15 +149,15 @@ class Generacional:
         elementos_p2 = padre2.tour[posiciones_p2]
 
         # Localizamos las posiciones que ocupan esos elementos en padre1
-        posiciones_p1 = np.where(np.isin(padre1.tour[:], elementos_p2))[0]
+        posiciones_p1 = np.where(np.isin(padre1.tour, elementos_p2))
 
         # Crea un nuevo individuo hijo
         hijo_tour = padre1.tour.copy()
         hijo_tour[posiciones_p1] = -1   # equivale a '*'
 
         # Completa con los elementos no repetidos de padre2
-        elementos_no_repe_p2 = padre2.tour[~np.isin(padre2.tour, padre1.tour)]
-        hijo_tour[posiciones_p1] = elementos_no_repe_p2
+        #elementos_no_repe_p2 = padre2.tour[~np.isin(padre2.tour, padre1.tour)]
+        hijo_tour[posiciones_p1] = elementos_p2
 
         hijo = Individuo(hijo_tour, padre1.matriz)  # El fitness se calcula automáticamente
 
@@ -170,7 +176,7 @@ class Generacional:
         mitad_der_padre2 = padre2.tour[punto_cruce:]
 
         # Verificar si cada elemento de padre1 está en mitad_der_padre2
-        esta_en_padre2 = np.isin(padre1, mitad_der_padre2)
+        esta_en_padre2 = np.isin(padre1.tour, mitad_der_padre2)
         indices_padre1 = np.where(esta_en_padre2)[0]    # índices de los elementos de padre1 que están en padre2
 
         hijo_tour = padre1.tour.copy()
@@ -190,18 +196,19 @@ class Generacional:
             if random.random() < self.params['per_mutacion']:   # Verificar con probabilidad %
                 individuo.mutar()
 
-
     def reemplazar(self, poblacion_descendiente, elites):
         """
         Reemplaza la población completa por la población descendiente,
         conservando el elitismo si es necesario.
         """
-        # Crear un conjunto de élites para facilitar la verificación
-        elites_set = set(elites)
-        poblacion_descendiente_set = set(poblacion_descendiente.individuos)
+        # Crear una lista de distancias de élites para facilitar la verificación
+        elites_distancias = [elite.distancia for elite in elites]
+        poblacion_descendiente_distancias = [individuo.distancia for individuo in poblacion_descendiente.individuos]
 
-        # Comprobar si el/los individuos élites están en la población descendiente
-        todos_elites_en_poblacion = elites_set.issubset(poblacion_descendiente_set)
+        # Comprobar si todos los individuos élites están en la población descendiente
+        todos_elites_en_poblacion = all(
+            elite in poblacion_descendiente.individuos for elite in elites
+        )
 
         if todos_elites_en_poblacion:
             # Si todos los individuos élites están en la población descendiente, simplemente
@@ -210,16 +217,18 @@ class Generacional:
         else:
             # Sí faltan élites, proceder a realizar el torneo para reemplazar
             for elite in elites:
-                if elite not in poblacion_descendiente_set:
+                if elite.distancia not in poblacion_descendiente_distancias:
                     # Realizar el torneo para elegir un peor individuo
                     torneo = random.sample(poblacion_descendiente.individuos, min(self.params['kWorst'], len(poblacion_descendiente.individuos)))
 
                     # Identificar el peor individuo en el torneo
-                    peor_individuo = min(torneo, key=lambda individuo: individuo.fitness)
+                    peor_individuo = max(torneo, key=lambda individuo: individuo.fitness)
 
                     # Reemplazar al peor individuo por el individuo élite
                     poblacion_descendiente.individuos.remove(peor_individuo)
                     poblacion_descendiente.individuos.append(elite)
+                    # Actualizar la lista de distancias para reflejar el cambio
+                    poblacion_descendiente_distancias = [individuo.distancia for individuo in poblacion_descendiente.individuos]
 
             # Asignar la nueva población asegurando el tamaño correcto
             self.poblacion.individuos = poblacion_descendiente.individuos[:len(self.poblacion.individuos)]

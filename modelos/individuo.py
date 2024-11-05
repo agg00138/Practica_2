@@ -19,7 +19,7 @@ class Individuo:
         else:
             self.distancia = distancia
 
-        self.fitness = distancia    # Valor fitness del individuo
+        self.fitness = self.distancia    # Valor fitness del individuo
 
 
     def calcular_distancia(self, matriz):
@@ -41,8 +41,9 @@ class Individuo:
         nueva_distancia_total = self.distancia - arcos_desaparecen + arcos_nuevos
 
         self.tour = mutacion_tour
-        self.distancia = self.fitness = nueva_distancia_total
+        self.distancia = nueva_distancia_total
+        self.fitness = nueva_distancia_total
 
 
     def __repr__(self):
-        return f'distancia={self.distancia})'
+        return f'distancia={self.fitness}'
