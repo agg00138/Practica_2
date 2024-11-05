@@ -15,11 +15,10 @@ class Poblacion:
         self.t = generacion
         self.matriz = matriz
         self.params = params
-        self.individuos = self.inicializar()
+        self.individuos = []
 
 
     def inicializar(self):
-        individuos = []
         num_individuos_aleatoria = int(self.params['tamanio'] * self.params['per_individuos'])
         num_individuos_greedy = (self.params['tamanio'] - num_individuos_aleatoria)
 
@@ -27,13 +26,11 @@ class Poblacion:
         for _ in range(num_individuos_aleatoria):
             tour = np.random.permutation(len(self.matriz))
             individuo = Individuo(tour, self.matriz)
-            individuos.append(individuo)
+            self.individuos.append(individuo)
 
         # Generación greedy aleatorio
         for _ in range(num_individuos_greedy):
             greedy = GreedyAleatorio(self.matriz, self.params)
             tour, distancia = greedy.ejecutar()
             individuo = Individuo(tour, self.matriz, distancia)
-            individuos.append(individuo)
-
-        return individuos
+            self.individuos.append(individuo)
