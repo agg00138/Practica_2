@@ -42,3 +42,7 @@ class Individuo:
 
         self.tour = mutacion_tour
         self.distancia = self.fitness = nueva_distancia_total
+
+
+    def __repr__(self):
+        return f'distancia={self.distancia})'
