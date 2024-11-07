@@ -202,7 +202,6 @@ class Generacional:
         conservando el elitismo si es necesario.
         """
         # Crear una lista de distancias de élites para facilitar la verificación
-        elites_distancias = [elite.distancia for elite in elites]
         poblacion_descendiente_distancias = [individuo.distancia for individuo in poblacion_descendiente.individuos]
 
         # Comprobar si todos los individuos élites están en la población descendiente
