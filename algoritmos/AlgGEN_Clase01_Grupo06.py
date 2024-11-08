@@ -141,8 +141,8 @@ class Generacional:
         n = len(padre1.tour)    # Número de ciudades en el tour
 
         # Elegir al azar varias posiciones del padre2
-        num_positions = random.randint(1, max(1, n // 3))  # Selecciona aproximadamente el 33% del tour
-        posiciones_p2 = np.random.choice(range(n), size=num_positions, replace=False)
+        num_posiciones = random.randint(1, max(1, n // 3))  # Selecciona aproximadamente el 33% del tour
+        posiciones_p2 = np.random.choice(range(n), size=num_posiciones, replace=False)
         posiciones_p2.sort()
 
         # Seleccionamos los elementos en esas posiciones
