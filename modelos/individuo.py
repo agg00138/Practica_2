@@ -33,14 +33,10 @@ class Individuo:
         i, j = np.random.choice(range(1, n - 1), size=2, replace=False)  # Evita el primer y último índice
 
         # Aplica el operador de intercambio 2-opt
-        mutacion_tour = self.tour.copy()
-        mutacion_tour[i], mutacion_tour[j] = self.tour[j], self.tour[i]
-
-        # Calcula (eficientemente) la distancia total del nuevo tour
         arcos_desaparecen, arcos_nuevos = factorizacion(self.tour, self.matriz, i, j)
         nueva_distancia_total = self.distancia - arcos_desaparecen + arcos_nuevos
 
-        self.tour = mutacion_tour
+        self.tour[i], self.tour[j] = self.tour[j], self.tour[i]     # Actualiza los índices del tour
         self.distancia = nueva_distancia_total
         self.fitness = nueva_distancia_total
 
