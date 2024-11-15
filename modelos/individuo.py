@@ -46,4 +46,4 @@ class Individuo:
 
 
     def __repr__(self):
-        return f'distancia={self.fitness}'
+        return f'distancia={self.fitness:.2f}'
