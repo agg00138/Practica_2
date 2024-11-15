@@ -19,6 +19,7 @@ class Poblacion:
 
 
     def inicializar(self, logger=None):
+        """Inicializa la población de individuos mediante aleatoriedad y greedy aleatorio."""
         num_individuos_aleatoria = int(self.params['tamanio'] * self.params['per_individuos'])
         num_individuos_greedy = (self.params['tamanio'] - num_individuos_aleatoria)
 
