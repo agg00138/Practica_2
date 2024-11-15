@@ -18,9 +18,11 @@ class Poblacion:
         self.individuos = []
 
 
-    def inicializar(self):
+    def inicializar(self, logger=None):
         num_individuos_aleatoria = int(self.params['tamanio'] * self.params['per_individuos'])
         num_individuos_greedy = (self.params['tamanio'] - num_individuos_aleatoria)
+
+        logger.registrar_evento(f'Nº.Individuos: Aleatorio = {num_individuos_aleatoria} | Greedy.Aleatorio = {num_individuos_greedy}')
 
         # Generación aleatoria
         for _ in range(num_individuos_aleatoria):

@@ -17,7 +17,7 @@ class Generacional:
     def __init__(self, matriz, params):
         self.matriz = matriz
         self.params = params
-        self.generacion = 0
+        self.generacion = 0               # Será nuestra t
         self.evaluaciones = 0
         self.inicio_tiempo = time.time()  # Iniciar el tiempo de ejecución
 
@@ -28,28 +28,36 @@ class Generacional:
         self.num_elites = self.params['E']
 
 
-    def ejecutar(self):
+    def ejecutar(self, logger=None):
         """Ejecuta el algoritmo evolutivo generacional."""
-        self.poblacion.inicializar()    # Inicializa la población
-        self.evaluar()  # Evalua la población actual
+
+        self.poblacion.inicializar(logger=logger)    # Inicializa la población
+        self.evaluar()  # Evalúa la población actual
+
+        logger.registrar_evento(f'Inicializada Poblacion de tamaño {self.params['tamanio']}, Nº.Evaluaciones = {self.evaluaciones}')
+
         while not self.condicion_parada():
-            print(f'GENERACION = {self.generacion} - EVALUACIONES = {self.evaluaciones}')
             self.generacion += 1
 
             # Obtiene el élite
             elites = self.obtener_elites()
-            print(f'Élite: {elites}')       # Mostrar correctamente las distancias
+
+            logger.registrar_evento(f'k = {self.num_elites} --> Elites: {elites}')
+
+            # Si es la primera generación registramos todos los eventos
+            if self.generacion == 1:
+                logger.registrar_evento(f'Generando Poblacion Intermedia...')
 
             # Selecciona la población intermedia P´ desde P(t - 1)
-            poblacion_intermedia = self.seleccionar()
+            poblacion_intermedia = self.seleccionar(logger=logger)
 
             # Recombina los individuos de la población P´ para obtener la descendencia
-            poblacion_descendiente = self.recombinar(poblacion_intermedia)
+            poblacion_descendiente = self.recombinar(poblacion_intermedia, logger=logger)
 
             # Aplica o no una mutación a cada individuo de la población descendiente
             self.mutar(poblacion_descendiente)
 
-            # Evalua la población descendiente después de la mutación
+            # Evalúa la población descendiente después de la mutación
             self.evaluar(poblacion_descendiente)
 
             # Reemplaza la población P(t) a partir de P(t - 1) y P´
@@ -57,7 +65,8 @@ class Generacional:
 
 
     def evaluar(self, poblacion_descendiente=None):
-        """Evalua toda la población."""
+        """Evalua toda la población. El fitness ya está pre calculado
+        al generar cada Individuo."""
         if poblacion_descendiente is None:
             for individuo in self.poblacion.individuos:
                 # Asumimos que la distancia ya está calculada
@@ -67,20 +76,29 @@ class Generacional:
                 self.evaluaciones += 1
 
 
-    def seleccionar(self):
+    def seleccionar(self, logger=None):
         """
         Operador de selección basado en un torneo binario con kBest
         Aplicándose tantas veces como individuos tenga la población.
         """
         poblacion_intermedia = Poblacion(self.generacion + 1, self.matriz, self.params)  # Nueva generación
 
+        if self.generacion == 1:
+            logger.registrar_evento(f'TORNEO GANADORES con kBest = {self.params['kBest']}')
+
         for _ in range(len(self.poblacion.individuos)):
             # Selecciona kBest individuos aleatoriamente
             torneo = random.sample(self.poblacion.individuos, self.params['kBest'])
 
+            if self.generacion == 1:
+                logger.registrar_evento(f'Candidatos: {torneo}')
+
             # Compara ambos individuos
             mejor_individuo = min(torneo, key=lambda individuo: individuo.fitness)
             poblacion_intermedia.individuos.append(mejor_individuo)
+
+            if self.generacion == 1:
+                logger.registrar_evento(f'Ganador: {mejor_individuo}')
 
         return poblacion_intermedia
 
@@ -92,7 +110,7 @@ class Generacional:
         return ordenados_por_distancia[:self.num_elites]
 
 
-    def recombinar(self, poblacion_intermedia):
+    def recombinar(self, poblacion_intermedia, logger=None):
         """Recombina una lista de individuos seleccionados en pares."""
         hijos = []
 
@@ -102,10 +120,13 @@ class Generacional:
             padre2 = poblacion_intermedia.individuos[i + 1]
 
             # Recombina el par de padres seleccionados
-            hijo1, hijo2 = self.recombinar_par(padre1, padre2)
+            hijo1, hijo2 = self.recombinar_par(padre1, padre2, logger=logger)
 
             # Añade los hijos a la población descendiente
             hijos.extend([hijo1, hijo2])
+
+            if self.generacion == 1:
+                logger.registrar_evento(f'Padre 1: {padre1} X Padre 2: {padre2} ==> Hijo 1: {hijo1}, Hijo 2: {hijo2}')
 
         # Crear la población descendiente como una instancia de Población
         poblacion_descendiente = Poblacion(self.generacion + 1, self.matriz, self.params)
@@ -114,7 +135,7 @@ class Generacional:
         return poblacion_descendiente
 
 
-    def recombinar_par(self, padre1, padre2):
+    def recombinar_par(self, padre1, padre2, logger=None):
         """Aplica recombinación entre dos individuos (padres) para producir dos hijos."""
         # Inicializar los hijos como copias de los padres
         hijo1 = Individuo(padre1.tour.copy(), padre1.matriz)
@@ -122,21 +143,24 @@ class Generacional:
 
         # Aplicar cruce con una probabilidad del 70%
         if random.random() < self.params['per_cruce']:
+
+            if self.generacion == 1:
+                logger.registrar_evento(f'Aplicando CRUCE {self.params['cruce']}:')
+
             # Elegir al azar entre OX2 y MOC
             if self.params['cruce'] == 'OX2':
                 # Aplicar cruce OX2
-                hijo1 = self.cruce_ox2(padre1, padre2)
-                hijo2 = self.cruce_ox2(padre2, padre1)
+                hijo1 = self.cruce_ox2(padre1, padre2, logger=logger)
+                hijo2 = self.cruce_ox2(padre2, padre1, logger=logger)
             else:
                 # Aplicar cruce MOC
-                hijo1 = self.cruce_moc(padre1, padre2)
-                hijo2 = self.cruce_moc(padre2, padre1)
+                hijo1 = self.cruce_moc(padre1, padre2, logger=None)
+                hijo2 = self.cruce_moc(padre2, padre1, logger= None)
 
         return hijo1, hijo2
 
 
-    @staticmethod
-    def cruce_ox2(padre1, padre2):
+    def cruce_ox2(self, padre1, padre2, logger=None):
         """Aplica el cruce OX2 entre dos padres para generar un hijo."""
         n = len(padre1.tour)    # Número de ciudades en el tour
 
@@ -156,16 +180,20 @@ class Generacional:
         hijo_tour[posiciones_p1] = -1   # equivale a '*'
 
         # Completa con los elementos no repetidos de padre2
-        #elementos_no_repe_p2 = padre2.tour[~np.isin(padre2.tour, padre1.tour)]
         hijo_tour[posiciones_p1] = elementos_p2
 
         hijo = Individuo(hijo_tour, padre1.matriz)  # El fitness se calcula automáticamente
 
+        if self.generacion == 1:
+            logger.registrar_evento(f'Posiciones Elegidas en Padre 2: {posiciones_p2}')
+            logger.registrar_evento(f'Elementos en esas posiciones: {elementos_p2}')
+            logger.registrar_evento(f'Posiciones Coincidentes en Padre 1: {posiciones_p1}')
+            logger.registrar_evento(f'Hijo generado: {hijo}')
+
         return hijo
 
 
-    @staticmethod
-    def cruce_moc(padre1, padre2):
+    def cruce_moc(self, padre1, padre2, logger=None):
         """Aplica el cruce MOC entre dos padres para generar un hijo."""
         n = len(padre1.tour)    # Número de ciudades en el tour
 
@@ -186,6 +214,10 @@ class Generacional:
         hijo_tour[indices_padre1] = mitad_der_padre2
 
         hijo = Individuo(hijo_tour, padre1.matriz)  # El fitness se calcula automáticamente
+
+        if self.generacion == 1:
+            logger.registrar_evento(f'Punto de cruce: {punto_cruce}')
+            logger.registrar_evento(f'Hijo generado: {hijo}')
 
         return hijo
 

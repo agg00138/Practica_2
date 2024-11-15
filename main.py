@@ -4,23 +4,19 @@
 import sys, os, random
 
 # Importaciones locales
+from auxiliares.crear_logs import Logger
 from auxiliares.funciones_generales import generar_semillas
 from auxiliares.procesador_archivos import ProcesadorTXT, ProcesadorTSP
-#from algoritmos.AlgGRE_Clase01_Grupo06 import GreedyAleatorio
-#from modelos.poblacion import Poblacion
 from algoritmos.AlgGEN_Clase01_Grupo06 import Generacional
+from algoritmos.AlgEST_Clase01_Grupo06 import Estacionario
 
 # Importaciones de terceros
 import numpy as np
 
 
-def print_hi(name):
-    """Muestra un mensaje de bienvenida."""
-    print(f'👋 ¡Hola, {name}! Bienvenido al mundo de las soluciones optimizadas. 🚀🧬')
-
-
 def procesar_archivos_tsp(archivos_tsp, params, semillas):
-    # Todo: Procesamiento de los archivos .tsp
+    """Procesamiento de los archivos (.tsp)."""
+
     for archivo in archivos_tsp:
         ruta_archivo = os.path.join('data', archivo)
 
@@ -52,17 +48,35 @@ def procesar_archivos_tsp(archivos_tsp, params, semillas):
             #     print(ind.tour)
             #     print(f'>>>distancia del tour = {ind.distancia}\n')
 
+            # Crea los ficheros logs
+            log_gen = Logger(nombre_algoritmo='GEN',archivo_tsp={'nombre': archivo}, semilla=semilla, num_ejecucion=i, echo=params['echo'])
+            log_est = Logger(nombre_algoritmo='EST',archivo_tsp={'nombre': archivo}, semilla=semilla, num_ejecucion=i, echo=params['echo'])
+
             # PRUEBA 03: Generacional
             # Ejecuta el algoritmo evolutivo generacional
+            log_gen.registrar_evento(f'Ejecutando Algoritmo GENERACIONAL con la semilla {semilla}:')
             generacional = Generacional(matriz, params)  # Crea una instancia del algoritmo generacional
-            generacional.ejecutar()  # Ejecuta el algoritmo
+            generacional.ejecutar(logger=log_gen)  # Ejecuta el algoritmo
 
             # Muestra resultados
-            print(f'Generación final alcanzada: {generacional.generacion}')
-            print(f'Evaluaciones realizadas: {generacional.evaluaciones}')
+            log_gen.registrar_evento(f'Generación final alcanzada: {generacional.generacion}')
+            log_gen.registrar_evento(f'Evaluaciones realizadas: {generacional.evaluaciones}')
             mejor_individuo = min(generacional.poblacion.individuos, key=lambda ind: ind.fitness)
-            print(f'Mejor tour encontrado: {mejor_individuo.tour}')
-            print(f'Distancia total del mejor tour: {mejor_individuo.distancia}\n')
+            log_gen.registrar_evento(f'Mejor tour encontrado: {mejor_individuo.tour}')
+            log_gen.registrar_evento(f'Distancia total del mejor tour: {mejor_individuo.distancia:.2f}\n')
+
+            # PRUEBA 04: Estacionario
+            # Ejecuta el algoritmo evolutivo estacionario
+            log_est.registrar_evento(f'Ejecutando Algoritmo ESTACIONARIO con la semilla {semilla}:')
+            estacionario = Estacionario(matriz, params)  # Crea una instancia del algoritmo estacionario
+            estacionario.ejecutar(logger=log_est)  # Ejecuta el algoritmo
+
+            # Muestra resultados
+            log_est.registrar_evento(f'Generación final alcanzada: {estacionario.generacion}')
+            log_est.registrar_evento(f'Evaluaciones realizadas: {estacionario.evaluaciones}')
+            mejor_individuo = min(estacionario.poblacion.individuos, key=lambda ind: ind.fitness)
+            log_est.registrar_evento(f'Mejor tour encontrado: {mejor_individuo.tour}')
+            log_est.registrar_evento(f'Distancia total del mejor tour: {mejor_individuo.distancia:.2f}\n')
 
 
 
@@ -92,10 +106,13 @@ def main():
     # Carga los archivos .tsp
     archivos_tsp = params['archivos_tsp']
 
+    # Crear logs si params['echo'] es False
+    if not params['echo']:
+        os.makedirs('logs', exist_ok=True)
+
     # Procesa los archivos
     procesar_archivos_tsp(archivos_tsp, params, semillas)
 
 
 if __name__ == '__main__':
-    print_hi('Cristobal')
     main()
