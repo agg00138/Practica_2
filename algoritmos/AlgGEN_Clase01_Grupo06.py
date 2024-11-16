@@ -5,10 +5,9 @@ import random, time
 
 # Importaciones locales
 from modelos.poblacion import Poblacion
-from modelos.individuo import Individuo
+from auxiliares.funciones_generales import cruce_ox2, cruce_moc
 
 # Importaciones de tercero
-import numpy as np
 
 
 class Generacional:
@@ -32,7 +31,7 @@ class Generacional:
         """Ejecuta el algoritmo evolutivo generacional."""
 
         self.poblacion.inicializar()    # Inicializa la población P(t)
-        self.evaluar()  # Evalúa la población P(t)
+        self.evaluar(self.poblacion)  # Evalúa la población P(t)
 
         while not self.condicion_parada():
             self.generacion += 1    # t = t + 1
@@ -56,16 +55,11 @@ class Generacional:
             self.reemplazar(nueva_poblacion, elites)
 
 
-    def evaluar(self, nueva_poblacion=None):
-        """Evalua toda la población. El fitness ya está pre calculado
-        al generar cada Individuo."""
-        if nueva_poblacion is None:
-            for individuo in self.poblacion.individuos:
-                # Asumimos que la distancia ya está calculada
-                self.evaluaciones += 1
-        else:
-            for individuo in nueva_poblacion.individuos:
-                self.evaluaciones += 1
+    def evaluar(self, poblacion):
+        """Evalúa la población al completo."""
+
+        # Asumimos que la distancia ya está calculada
+        self.evaluaciones += len(poblacion.individuos)
 
 
     def seleccionar(self):
@@ -73,13 +67,16 @@ class Generacional:
         Operador de selección basado en un torneo binario con kBest
         Aplicándose tantas veces como individuos tenga la población.
         """
-        poblacion_intermedia = Poblacion(self.generacion + 1, self.matriz, self.params)  # Nueva generación
+        poblacion_intermedia = Poblacion(self.generacion, self.matriz, self.params)  # Nueva generación
 
         for _ in range(len(self.poblacion.individuos)):
-            # Selecciona kBest individuos aleatoriamente
-            torneo = random.sample(self.poblacion.individuos, self.params['kBest'])
+            # Selecciona kBest individuos distintos para el torneo
+            while True:
+                torneo = random.sample(self.poblacion.individuos, self.params['kBest'])
+                if len(torneo) == len(set(torneo)):  # Asegura que los individuos son distintos
+                    break
 
-            # Compara ambos individuos
+            # Selecciona el mejor individuo del torneo
             mejor_individuo = min(torneo, key=lambda individuo: individuo.fitness)
             poblacion_intermedia.individuos.append(mejor_individuo)
 
@@ -94,8 +91,7 @@ class Generacional:
 
 
     def recombinar(self, poblacion_padres):
-        """Lanza una moneda y cruza aquellos individuos
-        de la población para generar los hijos"""
+        """Lanza una moneda y cruza aquellos individuos de la población para generar los hijos"""
 
         hijos = []
         num_lanzamientos = int(len(poblacion_padres.individuos) / 2)
@@ -111,11 +107,9 @@ class Generacional:
             if random.random() < self.params['per_cruce']:
 
                 if cruce == 'OX2':
-                    hijo1 = self.cruce_ox2(padre1, padre2)
-                    hijo2 = self.cruce_ox2(padre2, padre1)
+                    hijo1, hijo2 = cruce_ox2(padre1, padre2)
                 else:
-                    hijo1 = self.cruce_moc(padre1, padre2)
-                    hijo2 = self.cruce_moc(padre2, padre1)
+                    hijo1, hijo2 = cruce_moc(padre1, padre2)
             else:
                 hijo1, hijo2 = padre1, padre2
 
@@ -127,60 +121,6 @@ class Generacional:
         poblacion_descendiente.individuos = hijos[:len(poblacion_padres.individuos)]    # aseguro que sea del mismo tamaño
 
         return poblacion_descendiente
-
-
-    @staticmethod
-    def cruce_ox2(padre1, padre2):
-        """Aplica el cruce OX2 entre dos padres para generar un hijo."""
-        n = len(padre1.tour)    # Número de ciudades en el tour
-
-        # Elegir al azar varias posiciones del padre2
-        num_posiciones = random.randint(1, max(1, n // 3))  # Selecciona aproximadamente el 33% del tour
-        posiciones_p2 = np.random.choice(range(n), size=num_posiciones, replace=False)
-        posiciones_p2.sort()
-
-        # Seleccionamos los elementos en esas posiciones
-        elementos_p2 = padre2.tour[posiciones_p2]
-
-        # Localizamos las posiciones que ocupan esos elementos en padre1
-        posiciones_p1 = np.where(np.isin(padre1.tour, elementos_p2))
-
-        # Crea un nuevo individuo hijo
-        hijo_tour = padre1.tour.copy()
-        hijo_tour[posiciones_p1] = -1   # equivale a '*'
-
-        # Completa con los elementos no repetidos de padre2
-        hijo_tour[posiciones_p1] = elementos_p2
-
-        hijo = Individuo(hijo_tour, padre1.matriz)  # El fitness se calcula automáticamente
-
-        return hijo
-
-
-    @staticmethod
-    def cruce_moc(padre1, padre2):
-        """Aplica el cruce MOC entre dos padres para generar un hijo."""
-        n = len(padre1.tour)    # Número de ciudades en el tour
-
-        # Elegir un punto de cruce al azar
-        punto_cruce = random.randint(1, n - 2)  # Se elige el punto evitando los extremos
-
-        # Identifica la mitad derecha de padre2
-        mitad_der_padre2 = padre2.tour[punto_cruce:]
-
-        # Verificar si cada elemento de padre1 está en mitad_der_padre2
-        esta_en_padre2 = np.isin(padre1.tour, mitad_der_padre2)
-        indices_padre1 = np.where(esta_en_padre2)[0]    # índices de los elementos de padre1 que están en padre2
-
-        hijo_tour = padre1.tour.copy()
-        hijo_tour[indices_padre1] = -1  # equivale a '*'
-
-        # Completa las posiciones '*' con los elementos de la mitad derecha de padre2
-        hijo_tour[indices_padre1] = mitad_der_padre2
-
-        hijo = Individuo(hijo_tour, padre1.matriz)  # El fitness se calcula automáticamente
-
-        return hijo
 
 
     def mutar(self, poblacion_descendiente):
