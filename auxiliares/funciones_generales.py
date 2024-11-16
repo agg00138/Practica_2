@@ -4,7 +4,10 @@
 import random
 
 # Importaciones locales
+from modelos.individuo import Individuo
+
 # Importaciones de terceros
+import numpy as np
 
 
 def generar_semillas(dni_alumno, num_semillas, offset=0):
@@ -18,22 +21,60 @@ def generar_semillas(dni_alumno, num_semillas, offset=0):
     return semillas
 
 
-def factorizacion(tour, matriz, i, j):
-    """Calcula eficientemente la distancia de un tour tras un intercambio 2-opt."""
-    n = len(tour)
+def cruce_ox2(padre1, padre2):
+    """Aplica el cruce OX2 entre dos padres para generar un hijo."""
+    n = len(padre1.tour)    # Número de ciudades en el tour
 
-    # Manejar el caso cuando las ciudades son consecutivas
-    if abs(i - j) == 1 or (i == 0 and j == n - 1) or (i == n - 1 and j == 0):
-        arcos_desaparecen = matriz[tour[i - 1], tour[i]] + matriz[tour[j], tour[(j + 1) % n]]
-        arcos_nuevos = matriz[tour[i - 1], tour[j]] + matriz[tour[i], tour[(j + 1) % n]]
-    else:
-        arcos_desaparecen = (
-                matriz[tour[i - 1], tour[i]] + matriz[tour[i], tour[(i + 1) % n]] +
-                matriz[tour[j - 1], tour[j]] + matriz[tour[j], tour[(j + 1) % n]]
-        )
-        arcos_nuevos = (
-                matriz[tour[i - 1], tour[j]] + matriz[tour[j], tour[(i + 1) % n]] +
-                matriz[tour[j - 1], tour[i]] + matriz[tour[i], tour[(j + 1) % n]]
-        )
+    # Elegir al azar varias posiciones
+    num_posiciones = random.randint(1, max(1, n // 3))  # Selecciona aproximadamente el 33% del tour
+    posiciones = np.random.choice(range(n), size=num_posiciones, replace=False)
+    posiciones.sort()
 
-    return arcos_desaparecen, arcos_nuevos
+    # Seleccionamos los elementos en esas posiciones
+    elementos_p1 = padre1.tour[posiciones]
+    elementos_p2 = padre2.tour[posiciones]
+
+    # Localizamos las posiciones que ocupan esos elementos en padre1
+    posiciones_e2_en_p1 = np.where(np.isin(padre1.tour, elementos_p2))
+    posiciones_e1_en_p2 = np.where(np.isin(padre2.tour, elementos_p1))
+
+    # Crea un nuevo individuo hijo y completa con los elementos no repetidos de padre2 y viceversa
+    hijo1_tour = padre1.tour.copy()
+    hijo1_tour[posiciones_e2_en_p1] = elementos_p2
+    hijo1 = Individuo(hijo1_tour, padre1.matriz)  # El fitness se calcula automáticamente
+
+    hijo2_tour = padre2.tour.copy()
+    hijo2_tour[posiciones_e1_en_p2] = elementos_p1
+    hijo2 = Individuo(hijo2_tour, padre2.matriz)  # El fitness se calcula automáticamente
+
+    return hijo1, hijo2
+
+
+def cruce_moc(padre1, padre2):
+    """Aplica el cruce MOC entre dos padres para generar un hijo."""
+    n = len(padre1.tour)    # Número de ciudades en el tour
+
+    # Elegir un punto de cruce al azar
+    punto_cruce = random.randint(1, n - 2)  # Se elige el punto evitando los extremos
+
+    # Identifica la mitad derecha de padre2
+    mitad_der_padre2 = padre2.tour[punto_cruce:]
+    mitad_der_padre1 = padre1.tour[punto_cruce:]
+
+    # Verificar si cada elemento de padre1 está en mitad_der_padre2
+    esta_en_padre2 = np.isin(padre1.tour, mitad_der_padre2)
+    indices_padre1 = np.where(esta_en_padre2)[0]    # índices de los elementos de padre1 que están en padre2
+
+    esta_en_padre1 = np.isin(padre2.tour, mitad_der_padre1)
+    indices_padre2 = np.where(esta_en_padre1)[0]    # índices de los elementos de padre2 que están en padre1
+
+    # Completa las posiciones '*' con los elementos de la mitad derecha de padre2 y viceversa
+    hijo1_tour = padre1.tour.copy()
+    hijo1_tour[indices_padre1] = mitad_der_padre2
+    hijo1 = Individuo(hijo1_tour, padre1.matriz)  # El fitness se calcula automáticamente
+
+    hijo2_tour = padre2.tour.copy()
+    hijo2_tour[indices_padre2] = mitad_der_padre1
+    hijo2 = Individuo(hijo2_tour, padre2.matriz)  # El fitness se calcula automáticamente
+
+    return hijo1, hijo2
