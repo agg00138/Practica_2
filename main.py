@@ -36,29 +36,31 @@ def procesar_archivos_tsp(archivos_tsp, params, semillas):
 
             # PRUEBA 03: Generacional
             # Ejecuta el algoritmo evolutivo generacional
-            print(f'Ejecutando Algoritmo GENERACIONAL con la semilla {semilla}:')
-            generacional = Generacional(matriz, params)  # Crea una instancia del algoritmo generacional
-            generacional.ejecutar()  # Ejecuta el algoritmo
+            if 'generacional' in params['algoritmos']:
+                print(f'Ejecutando Algoritmo GENERACIONAL con la semilla {semilla}:')
+                generacional = Generacional(matriz, params)  # Crea una instancia del algoritmo generacional
+                generacional.ejecutar()  # Ejecuta el algoritmo
 
-            # Muestra resultados
-            print(f'Generación final alcanzada: {generacional.generacion}')
-            print(f'Evaluaciones realizadas: {generacional.evaluaciones}')
-            mejor_individuo = min(generacional.poblacion.individuos, key=lambda ind: ind.fitness)
-            print(f'Mejor tour encontrado: {mejor_individuo.tour}')
-            print(f'Distancia total del mejor tour: {mejor_individuo.distancia:.2f}\n')
+                # Muestra resultados
+                print(f'Generación final alcanzada: {generacional.generacion}')
+                print(f'Evaluaciones realizadas: {generacional.evaluaciones}')
+                mejor_individuo = min(generacional.poblacion, key=lambda ind: ind.fitness)
+                print(f'Mejor tour encontrado: {mejor_individuo.tour}')
+                print(f'Distancia total del mejor tour: {mejor_individuo.fitness:.2f}\n')
 
             # PRUEBA 04: Estacionario
             # Ejecuta el algoritmo evolutivo estacionario
-            print(f'Ejecutando Algoritmo ESTACIONARIO con la semilla {semilla}:')
-            estacionario = Estacionario(matriz, params)  # Crea una instancia del algoritmo estacionario
-            estacionario.ejecutar()  # Ejecuta el algoritmo
+            if 'estacionario' in params['algoritmos']:
+                print(f'Ejecutando Algoritmo ESTACIONARIO con la semilla {semilla}:')
+                estacionario = Estacionario(matriz, params)  # Crea una instancia del algoritmo estacionario
+                estacionario.ejecutar()  # Ejecuta el algoritmo
 
-            # Muestra resultados
-            print(f'Generación final alcanzada: {estacionario.generacion}')
-            print(f'Evaluaciones realizadas: {estacionario.evaluaciones}')
-            mejor_individuo = min(estacionario.poblacion.individuos, key=lambda ind: ind.fitness)
-            print(f'Mejor tour encontrado: {mejor_individuo.tour}')
-            print(f'Distancia total del mejor tour: {mejor_individuo.distancia:.2f}\n')
+                # Muestra resultados
+                print(f'Generación final alcanzada: {estacionario.generacion}')
+                print(f'Evaluaciones realizadas: {estacionario.evaluaciones}')
+                mejor_individuo = min(estacionario.poblacion, key=lambda ind: ind.fitness)
+                print(f'Mejor tour encontrado: {mejor_individuo.tour}')
+                print(f'Distancia total del mejor tour: {mejor_individuo.fitness:.2f}\n')
 
 
 

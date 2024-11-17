@@ -4,158 +4,176 @@
 import random, time
 
 # Importaciones locales
-from modelos.poblacion import Poblacion
-from auxiliares.funciones_generales import cruce_ox2, cruce_moc
+from modelos.individuo import Individuo
+from auxiliares.funciones_generales import funcion_objetivo, cruce_ox2, cruce_moc
+from algoritmos.AlgGRE_Clase01_Grupo06 import GreedyAleatorio
 
 # Importaciones de tercero
+import numpy as np
 
 
 class Generacional:
-    """Implementa un algoritmo evolutivo generacional (GEN)."""
+    """Implementa el algoritmo evolutivo generacional (GEN)."""
 
     def __init__(self, matriz, params):
         self.matriz = matriz
         self.params = params
-        self.generacion = 0               # Será nuestra t
-        self.evaluaciones = 0
-        self.inicio_tiempo = time.time()  # Iniciar el tiempo de ejecución
+        self.generacion = None
+        self.poblacion = []     # Lista de individuos (soluciones)
 
-        # Inicializar la población
-        self.poblacion = Poblacion(self.generacion, self.matriz, self.params)
+        self.evaluaciones = 0   # Evaluaciones realizadas
+        self.elite = []         # Almacena el individuo élite (depende de 'E')
 
-        # Número de élites a preservar
-        self.num_elites = self.params['E']
+        self.inicio_tiempo = time.time()
 
 
     def ejecutar(self):
         """Ejecuta el algoritmo evolutivo generacional."""
 
-        self.poblacion.inicializar()    # Inicializa la población P(t)
-        self.evaluar(self.poblacion)  # Evalúa la población P(t)
+        self.generacion = 0
+        self.inicializar_poblacion()
+        self.evaluar(self.poblacion)
 
-        while not self.condicion_parada():
-            self.generacion += 1    # t = t + 1
+        while (self.evaluaciones < self.params['max_evaluaciones']) and (time.time() - self.inicio_tiempo < self.params['tiempo']):
 
-            # Obtiene el élite de P(t) para evitar perderlos
-            elites = self.obtener_elites()
+            # t = t+1
+            self.generacion += 1
 
-            # Selecciona la población intermedia P´ desde P(t - 1)
+            # Guardamos los mejores individuos (soluciones) de P(t) para no perderlos
+            self.elite = sorted(self.poblacion, key=lambda ind: ind.fitness)[:self.params['E']]
+
+            # Selecciona la población intermedia P´ desde P(t-1)
             poblacion_padres = self.seleccionar()
 
-            # Recombina los individuos de la población P´ para obtener la descendencia
+            # Recombina los individuos de la población P´para obtener la descendencia
             nueva_poblacion = self.recombinar(poblacion_padres)
 
-            # Aplica o no una mutación a cada individuo de la población descendiente
+            # Muta los individuos de la población
             self.mutar(nueva_poblacion)
 
-            # Evalúa la población descendiente (nueva población) P(t)
+            # Evalúa la nueva población de individuos generada P(t)
             self.evaluar(nueva_poblacion)
 
-            # Reemplaza la población P(t) a partir de P(t - 1) y P´
-            self.reemplazar(nueva_poblacion, elites)
+            # Reemplaza la población actual por la nueva
+            self.reemplazar(nueva_poblacion)
+
+
+    def inicializar_poblacion(self):
+        """Inicializa la población de individuos."""
+
+        num_individuos_aleatoria = int(self.params['tamanio'] * self.params['per_individuos'])
+        num_individuos_greedy = self.params['tamanio'] - num_individuos_aleatoria
+
+        # Generación aleatoria
+        for _ in range(num_individuos_aleatoria):
+            tour = np.random.default_rng().permutation(len(self.matriz))
+            individuo = Individuo(tour)
+            self.poblacion.append(individuo)
+
+        # Generación greedy aleatorio
+        for _ in range(num_individuos_greedy):
+            greedy = GreedyAleatorio(self.matriz, self.params)
+            tour = greedy.ejecutar()
+            individuo = Individuo(tour)
+            self.poblacion.append(individuo)
 
 
     def evaluar(self, poblacion):
-        """Evalúa la población al completo."""
+        """Evalúa cada individuo no evaluado de la población."""
 
-        # Asumimos que la distancia ya está calculada
-        self.evaluaciones += len(poblacion.individuos)
+        for individuo in poblacion:
+            # Si el individuo no ha sido evaluado
+            if not individuo.flag:
+                # Evaluamos el individuo (solución) calculando su fitness
+                individuo.fitness = funcion_objetivo(individuo.tour, self.matriz)
+                individuo.flag = True
+                self.evaluaciones += 1
 
 
     def seleccionar(self):
-        """
-        Operador de selección basado en un torneo binario con kBest
-        Aplicándose tantas veces como individuos tenga la población.
-        """
-        poblacion_intermedia = Poblacion(self.generacion, self.matriz, self.params)  # Nueva generación
+        """Operador de selección basado en un torneo binario con kBest."""
 
-        for _ in range(len(self.poblacion.individuos)):
-            # Selecciona kBest individuos distintos para el torneo
+        poblacion_padres = []
+
+        for _ in range(len(self.poblacion)):
+
+            # Selecciona kBest individuos del torneo
             while True:
-                torneo = random.sample(self.poblacion.individuos, self.params['kBest'])
-                if len(torneo) == len(set(torneo)):  # Asegura que los individuos son distintos
+                torneo = random.sample(self.poblacion, self.params['kBest'])
+                # Nos aseguramos que ambos individuos sean distintos
+                if len(torneo) == len(set(torneo)):
                     break
 
-            # Selecciona el mejor individuo del torneo
-            mejor_individuo = min(torneo, key=lambda individuo: individuo.fitness)
-            poblacion_intermedia.individuos.append(mejor_individuo)
+            # Selecciona al mejor individuo del torneo
+            mejor = min(torneo, key=lambda ind: ind.fitness)
+            poblacion_padres.append(mejor)
 
-        return poblacion_intermedia
-
-
-    def obtener_elites(self):
-        """Obtiene el/los mejores individuos como élite."""
-        ordenados_por_distancia = sorted(self.poblacion.individuos, key=lambda individuo: individuo.fitness)
-
-        return ordenados_por_distancia[:self.num_elites]
+        return poblacion_padres
 
 
     def recombinar(self, poblacion_padres):
-        """Lanza una moneda y cruza aquellos individuos de la población para generar los hijos"""
+        """Recombina con una cierta probabilidad los individuos de la población."""
 
-        hijos = []
-        num_lanzamientos = int(len(poblacion_padres.individuos) / 2)
+        poblacion_hijos = []
         cruce = self.params['cruce']
+        num_lanzamientos = int(len(poblacion_padres) / 2)
 
-        # Si el tamaño de la población es N, se requieren N/2 "cruces"
         for _ in range(num_lanzamientos):
 
-            # Selecciono dos padres aleatoriamente
-            padre1, padre2 = random.sample(poblacion_padres.individuos, 2)
+            # Selecciona dos padres aleatoriamente
+            padre_1, padre_2 = random.sample(poblacion_padres, 2)
 
-            # Lanza una moneda aleatoriamente
+            # Lanzamiento aleatorio (moneda)
             if random.random() < self.params['per_cruce']:
 
                 if cruce == 'OX2':
-                    hijo1, hijo2 = cruce_ox2(padre1, padre2)
+                    hijo_1, hijo_2 = cruce_ox2(padre_1, padre_2)
                 else:
-                    hijo1, hijo2 = cruce_moc(padre1, padre2)
+                    hijo_1, hijo_2 = cruce_moc(padre_1, padre_2)
+
+                # Establezco la generación en que fueron generados
+                hijo_1.generacion = self.generacion
+                hijo_2.generacion = self.generacion
             else:
-                hijo1, hijo2 = padre1, padre2
+                # No cruza los padres y los mantiene en la población descendiente (no actualiza la generación)
+                hijo_1, hijo_2 = padre_1, padre_2
 
-            # Añado cada hijo a la lista
-            hijos.extend([hijo1, hijo2])
+            poblacion_hijos.extend([hijo_1, hijo_2])
 
-        # Una vez que tenemos todos los hijos creamos una nueva población de descendientes
-        poblacion_descendiente = Poblacion(self.generacion, self.matriz, self.params)
-        poblacion_descendiente.individuos = hijos[:len(poblacion_padres.individuos)]    # aseguro que sea del mismo tamaño
-
-        return poblacion_descendiente
+        return poblacion_hijos
 
 
-    def mutar(self, poblacion_descendiente):
-        """Con una probabilidad %/individuo se aplica una mutación al individuo."""
-        for individuo in poblacion_descendiente.individuos:
-            if random.random() < self.params['per_mutacion']:   # Verificar con probabilidad %
-                individuo.mutar()
+    def mutar(self, nueva_poblacion):
+        """Aplica la mutación con una cierta probabilidad a cada individuo de la población."""
+
+        for individuo in nueva_poblacion:
+            if random.random() < self.params['per_mutacion']:
+                # Muta al individuo (aplica 2-opt)
+                individuo.intercambio_2_opt(self.matriz)
 
 
-    def reemplazar(self, nueva_poblacion, elites):
-        """Reemplaza la población completa por la nueva población conservando el elitismo."""
+    def reemplazar(self, nueva_poblacion):
+        """Reemplaza por completo la población de individuos preservando el elitismo."""
 
-        # Creamos un conjunto de élites
-        conjunto_elites = set(elites)
+        # Creamos un conjunto con las distancias del elitismo
+        conjunto_elite = set(self.elite)
 
-        for elite in conjunto_elites:
-            if elite not in nueva_poblacion.individuos:
+        # Creamos un conjunto con los fitness de la nueva población
+        fitness_nueva_poblacion = {ind.fitness for ind in nueva_poblacion}
+
+        for elite in conjunto_elite:
+            if elite.fitness not in fitness_nueva_poblacion:
 
                 # Realiza un torneo de perdedores
-                torneo = random.sample(nueva_poblacion.individuos, self.params['kWorst'])
-                peor_individuo = max(torneo, key=lambda individuo: individuo.fitness)
-                nueva_poblacion.individuos.remove(peor_individuo)
-                nueva_poblacion.individuos.append(elite)
+                while True:
+                    torneo = random.sample(nueva_poblacion, self.params['kWorst'])
+                    # Nos aseguramos que ambos individuos sean distintos
+                    if len(torneo) == len(set(torneo)):
+                        break
 
-        # Reemplaza por la nueva población
+                peor = max(torneo, key=lambda ind: ind.fitness)
+                nueva_poblacion.remove(peor)
+                nueva_poblacion.append(elite)
+
+        # Reemplaza por completo a la población
         self.poblacion = nueva_poblacion
-
-
-    def condicion_parada(self):
-        """
-        Verifica si el algoritmo ha llegado al máximo de evaluaciones,
-        o han transcurrido 60 segundos.
-        """
-        tiempo_transcurrido = time.time() - self.inicio_tiempo  # Tiempo transcurrido en segundos
-        max_evaluaciones = self.params['max_evaluaciones']
-        max_tiempo = self.params['tiempo']
-
-        return self.evaluaciones >= max_evaluaciones or tiempo_transcurrido >= max_tiempo

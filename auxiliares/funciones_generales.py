@@ -6,12 +6,13 @@ import random
 # Importaciones locales
 from modelos.individuo import Individuo
 
-# Importaciones de terceros
+# Importaciones de tercero
 import numpy as np
 
 
 def generar_semillas(dni_alumno, num_semillas, offset=0):
     """Genera un número de semillas pseudoaleatorias"""
+
     if not isinstance(num_semillas, int) or num_semillas <= 0:
         raise ValueError("num_semillas debe ser un entero positivo.")
 
@@ -21,9 +22,17 @@ def generar_semillas(dni_alumno, num_semillas, offset=0):
     return semillas
 
 
+def funcion_objetivo(tour, matriz):
+    """Calcula la distancia (fitness) del individuo (solución)."""
+
+    distancia = np.sum(matriz[tour[:-1], tour[1:]]) + matriz[tour[-1], tour[0]]
+    return distancia
+
+
 def cruce_ox2(padre1, padre2):
     """Aplica el cruce OX2 entre dos padres para generar un hijo."""
-    n = len(padre1.tour)    # Número de ciudades en el tour
+
+    n = len(padre1.tour)
 
     # Elegir al azar varias posiciones
     num_posiciones = random.randint(1, max(1, n // 3))  # Selecciona aproximadamente el 33% del tour
@@ -41,18 +50,19 @@ def cruce_ox2(padre1, padre2):
     # Crea un nuevo individuo hijo y completa con los elementos no repetidos de padre2 y viceversa
     hijo1_tour = padre1.tour.copy()
     hijo1_tour[posiciones_e2_en_p1] = elementos_p2
-    hijo1 = Individuo(hijo1_tour, padre1.matriz)  # El fitness se calcula automáticamente
+    hijo1 = Individuo(hijo1_tour)  # El fitness se calcula automáticamente
 
     hijo2_tour = padre2.tour.copy()
     hijo2_tour[posiciones_e1_en_p2] = elementos_p1
-    hijo2 = Individuo(hijo2_tour, padre2.matriz)  # El fitness se calcula automáticamente
+    hijo2 = Individuo(hijo2_tour)  # El fitness se calcula automáticamente
 
     return hijo1, hijo2
 
 
 def cruce_moc(padre1, padre2):
     """Aplica el cruce MOC entre dos padres para generar un hijo."""
-    n = len(padre1.tour)    # Número de ciudades en el tour
+
+    n = len(padre1.tour)
 
     # Elegir un punto de cruce al azar
     punto_cruce = random.randint(1, n - 2)  # Se elige el punto evitando los extremos
@@ -71,10 +81,10 @@ def cruce_moc(padre1, padre2):
     # Completa las posiciones '*' con los elementos de la mitad derecha de padre2 y viceversa
     hijo1_tour = padre1.tour.copy()
     hijo1_tour[indices_padre1] = mitad_der_padre2
-    hijo1 = Individuo(hijo1_tour, padre1.matriz)  # El fitness se calcula automáticamente
+    hijo1 = Individuo(hijo1_tour)  # El fitness se calcula automáticamente
 
     hijo2_tour = padre2.tour.copy()
     hijo2_tour[indices_padre2] = mitad_der_padre1
-    hijo2 = Individuo(hijo2_tour, padre2.matriz)  # El fitness se calcula automáticamente
+    hijo2 = Individuo(hijo2_tour)  # El fitness se calcula automáticamente
 
     return hijo1, hijo2
